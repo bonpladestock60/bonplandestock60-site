@@ -25,10 +25,8 @@ exports.handler = async (event) => {
           quantity: 1,
         },
       ],
-      success_url:
-        https://fluffy-flan-b0edea.netlify.app/test-stripe.html?paiement=succes
-      cancel_url:
-        "https://fluffy-flan-b0edea.netlify.app/?paiement=annule",
+      success_url: "https://fluffy-flan-b0edea.netlify.app/test-stripe.html?paiement=succes",
+      cancel_url: "https://fluffy-flan-b0edea.netlify.app/test-stripe.html?paiement=annule",
     });
 
     return {
