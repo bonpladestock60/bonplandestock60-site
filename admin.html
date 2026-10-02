@@ -386,25 +386,14 @@ async function loadProducts(){
 }
 
 async function saveProduct(){
-  const id =
-    document.getElementById("productId").value;
+  const id = document.getElementById("productId").value;
+  const name = document.getElementById("name").value.trim();
+  const category = document.getElementById("category").value.trim();
+  const details = document.getElementById("details").value.trim();
 
-  const name =
-    document.getElementById("name").value.trim();
-
-  const category =
-    document.getElementById("category").value.trim();
-
-  const details =
-    document.getElementById("details").value.trim();
-
-  const price =
-    parseFloat(
-      document.getElementById("price").value
-    );
-
-  const image_url =
-    document.getElementById("imageUrl").value.trim();
+  const price = parseFloat(
+    document.getElementById("price").value
+  );
 
   const stock_status =
     document.getElementById("stockStatus").value;
@@ -418,46 +407,99 @@ async function saveProduct(){
     return;
   }
 
-  const product = {
-    name,
-    category,
-    details,
-    price_cents:Math.round(price*100),
-    image_url: finalImageUrl,
-    stock_status
-  };
+  let finalImageUrl =
+    document.getElementById("imageUrl").value.trim() || null;
 
-  msg.textContent =
-    "Enregistrement...";
+  const imageInput =
+    document.getElementById("imageFile");
 
-  let result;
+  const imageFile =
+    imageInput && imageInput.files
+      ? imageInput.files[0]
+      : null;
 
-  if(id){
-    result =
-      await client
-        .from("products")
-        .update(product)
-        .eq("id",id);
-  }else{
-    result =
-      await client
-        .from("products")
-        .insert(product);
-  }
+  try{
+    if(imageFile){
+      msg.textContent = "Envoi de la photo...";
 
-  if(result.error){
+      const safeName =
+        imageFile.name.replace(
+          /[^a-zA-Z0-9._-]/g,
+          "_"
+        );
+
+      const fileName =
+        Date.now() + "-" + safeName;
+
+      const { error: uploadError } =
+        await client.storage
+          .from("product-images")
+          .upload(
+            fileName,
+            imageFile,
+            { upsert:false }
+          );
+
+      if(uploadError){
+        throw uploadError;
+      }
+
+      const { data } =
+        client.storage
+          .from("product-images")
+          .getPublicUrl(fileName);
+
+      finalImageUrl =
+        data.publicUrl;
+    }
+
+    const product = {
+      name,
+      category,
+      details,
+      price_cents:
+        Math.round(price * 100),
+      image_url:
+        finalImageUrl,
+      stock_status
+    };
+
     msg.textContent =
-      "Erreur : " + result.error.message;
-    return;
+      "Enregistrement...";
+
+    let result;
+
+    if(id){
+      result =
+        await client
+          .from("products")
+          .update(product)
+          .eq("id",id);
+    }else{
+      result =
+        await client
+          .from("products")
+          .insert(product);
+    }
+
+    if(result.error){
+      throw result.error;
+    }
+
+    msg.textContent =
+      id
+      ? "Produit modifié ✅"
+      : "Produit enregistré ✅";
+
+    resetForm();
+    await loadProducts();
+
+  }catch(error){
+    msg.textContent =
+      "Erreur : " +
+      (error.message || error);
   }
-
-  msg.textContent =
-    "Produit enregistré ✅";
-
-  resetForm();
-  loadProducts();
 }
-
 function editProduct(p){
   document.getElementById("productId").value =
     p.id;
