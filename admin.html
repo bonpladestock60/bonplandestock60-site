@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin — Bonplandestock60</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --gold:#b8942f;
+      --black:#080808;
+      --dark:#151515;
+      --white:#fff;
+      --grey:#aaa;
+      --red:#d9534f;
+      --green:#28a745;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:var(--black);
+      color:var(--white);
+    }
+
+    header{
+      padding:20px;
+      border-bottom:1px solid #333;
+      text-align:center;
+    }
+
+    header h1{
+      margin:0;
+      color:var(--gold);
+    }
+
+    .wrap{
+      max-width:850px;
+      margin:auto;
+      padding:20px;
+    }
+
+    .card{
+      background:var(--dark);
+      border:1px solid #333;
+      border-radius:16px;
+      padding:18px;
+      margin-bottom:18px;
+    }
+
+    input,select,textarea{
+      width:100%;
+      padding:13px;
+      margin:7px 0;
+      border-radius:10px;
+      border:1px solid #555;
+      background:#222;
+      color:white;
+      font-size:16px;
+    }
+
+    textarea{min-height:90px}
+
+    button{
+      width:100%;
+      padding:14px;
+      border:0;
+      border-radius:10px;
+      font-size:16px;
+      font-weight:bold;
+      cursor:pointer;
+      margin-top:8px;
+    }
+
+    .gold{
+      background:var(--gold);
+      color:#000;
+    }
+
+    .red{
+      background:var(--red);
+      color:white;
+    }
+
+    .grey{
+      background:#444;
+      color:white;
+    }
+
+    .hidden{display:none}
+
+    .product{
+      border:1px solid #333;
+      border-radius:14px;
+      padding:14px;
+      margin-bottom:12px;
+      background:#101010;
+    }
+
+    .product img{
+      width:90px;
+      height:90px;
+      object-fit:contain;
+      background:white;
+      border-radius:10px;
+      margin-bottom:10px;
+    }
+
+    .product h3{
+      margin:5px 0;
+      color:var(--gold);
+    }
+
+    .price{
+      font-size:20px;
+      font-weight:bold;
+    }
+
+    .out{
+      color:#ff6b6b;
+      font-weight:bold;
+    }
+
+    .in{
+      color:#66d17a;
+      font-weight:bold;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+
+    #message{
+      margin-top:10px;
+      font-weight:bold;
+    }
+
+    @media(max-width:600px){
+      .row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Bonplandestock60</h1>
+  <div>Administration</div>
+</header>
+
+<div class="wrap">
+
+  <section id="loginBox" class="card">
+    <h2>Connexion admin</h2>
+
+    <input id="email" type="email" placeholder="Adresse e-mail">
+    <input id="password" type="password" placeholder="Mot de passe">
+
+    <button class="gold" onclick="login()">Se connecter</button>
+
+    <div id="loginMessage"></div>
+  </section>
+
+  <section id="adminBox" class="hidden">
+
+    <div class="card">
+      <button class="grey" onclick="logout()">Se déconnecter</button>
+    </div>
+
+    <div class="card">
+      <h2 id="formTitle">Ajouter un produit</h2>
+
+      <input id="productId" type="hidden">
+
+      <input id="name" placeholder="Nom du produit">
+
+      <input id="category" placeholder="Catégorie">
+
+      <textarea id="details" placeholder="Détails / format"></textarea>
+
+      <input
+        id="price"
+        type="number"
+        step="0.01"
+        min="0"
+        placeholder="Prix en €">
+
+      <input
+        id="imageUrl"
+        placeholder="URL de la photo">
+
+      <select id="stockStatus">
+        <option value="in_stock">En stock</option>
+        <option value="out_of_stock">Épuisé</option>
+      </select>
+
+      <button class="gold" onclick="saveProduct()">
+        Enregistrer le produit
+      </button>
+
+      <button
+        id="cancelEdit"
+        class="grey hidden"
+        onclick="resetForm()">
+        Annuler la modification
+      </button>
+
+      <div id="message"></div>
+    </div>
+
+    <div class="card">
+      <h2>Produits</h2>
+      <button class="grey" onclick="loadProducts()">
+        Actualiser
+      </button>
+
+      <div id="products"></div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+const SUPABASE_URL =
+  "https://jefwbrryqbjpttuljocj.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_OLiKeTazrrbSFXev6lLyhg_9tOh9mZj";
+
+const client = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+async function start(){
+  const {
+    data:{session}
+  } = await client.auth.getSession();
+
+  if(session){
+    showAdmin();
+  }
+}
+
+async function login(){
+  const email =
+    document.getElementById("email").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+  const msg =
+    document.getElementById("loginMessage");
+
+  msg.textContent = "Connexion...";
+
+  const {error} =
+    await client.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if(error){
+    msg.textContent =
+      "Erreur : " + error.message;
+    return;
+  }
+
+  msg.textContent = "";
+  showAdmin();
+}
+
+async function logout(){
+  await client.auth.signOut();
+
+  document
+    .getElementById("adminBox")
+    .classList.add("hidden");
+
+  document
+    .getElementById("loginBox")
+    .classList.remove("hidden");
+}
+
+function showAdmin(){
+  document
+    .getElementById("loginBox")
+    .classList.add("hidden");
+
+  document
+    .getElementById("adminBox")
+    .classList.remove("hidden");
+
+  loadProducts();
+}
+
+async function loadProducts(){
+  const container =
+    document.getElementById("products");
+
+  container.innerHTML =
+    "<p>Chargement...</p>";
+
+  const {data,error} =
+    await client
+      .from("products")
+      .select("*")
+      .order("id",{ascending:false});
+
+  if(error){
+    container.innerHTML =
+      "<p>Erreur : " +
+      escapeHtml(error.message) +
+      "</p>";
+    return;
+  }
+
+  if(!data || data.length === 0){
+    container.innerHTML =
+      "<p>Aucun produit dans Supabase pour le moment.</p>";
+    return;
+  }
+
+  container.innerHTML = "";
+
+  data.forEach(p=>{
+    const div =
+      document.createElement("div");
+
+    div.className = "product";
+
+    const image =
+      p.image_url
+      ? `<img src="${escapeAttr(p.image_url)}" alt="">`
+      : "";
+
+    const stock =
+      p.stock_status === "out_of_stock"
+      ? `<div class="out">ÉPUISÉ</div>`
+      : `<div class="in">EN STOCK</div>`;
+
+    div.innerHTML = `
+      ${image}
+
+      <h3>${escapeHtml(p.name || "")}</h3>
+
+      <div>${escapeHtml(p.category || "")}</div>
+
+      <div>${escapeHtml(p.details || "")}</div>
+
+      <div class="price">
+        ${((p.price_cents || 0)/100)
+          .toFixed(2)
+          .replace(".",",")} €
+      </div>
+
+      ${stock}
+
+      <div class="row">
+        <button class="gold">
+          Modifier
+        </button>
+
+        <button class="red">
+          Supprimer
+        </button>
+      </div>
+    `;
+
+    const buttons =
+      div.querySelectorAll("button");
+
+    buttons[0].onclick =
+      ()=>editProduct(p);
+
+    buttons[1].onclick =
+      ()=>deleteProduct(p.id,p.name);
+
+    container.appendChild(div);
+  });
+}
+
+async function saveProduct(){
+  const id =
+    document.getElementById("productId").value;
+
+  const name =
+    document.getElementById("name").value.trim();
+
+  const category =
+    document.getElementById("category").value.trim();
+
+  const details =
+    document.getElementById("details").value.trim();
+
+  const price =
+    parseFloat(
+      document.getElementById("price").value
+    );
+
+  const image_url =
+    document.getElementById("imageUrl").value.trim();
+
+  const stock_status =
+    document.getElementById("stockStatus").value;
+
+  const msg =
+    document.getElementById("message");
+
+  if(!name || !category || isNaN(price)){
+    msg.textContent =
+      "Nom, catégorie et prix sont obligatoires.";
+    return;
+  }
+
+  const product = {
+    name,
+    category,
+    details,
+    price_cents:Math.round(price*100),
+    image_url:image_url || null,
+    stock_status
+  };
+
+  msg.textContent =
+    "Enregistrement...";
+
+  let result;
+
+  if(id){
+    result =
+      await client
+        .from("products")
+        .update(product)
+        .eq("id",id);
+  }else{
+    result =
+      await client
+        .from("products")
+        .insert(product);
+  }
+
+  if(result.error){
+    msg.textContent =
+      "Erreur : " + result.error.message;
+    return;
+  }
+
+  msg.textContent =
+    "Produit enregistré ✅";
+
+  resetForm();
+  loadProducts();
+}
+
+function editProduct(p){
+  document.getElementById("productId").value =
+    p.id;
+
+  document.getElementById("name").value =
+    p.name || "";
+
+  document.getElementById("category").value =
+    p.category || "";
+
+  document.getElementById("details").value =
+    p.details || "";
+
+  document.getElementById("price").value =
+    ((p.price_cents || 0)/100).toFixed(2);
+
+  document.getElementById("imageUrl").value =
+    p.image_url || "";
+
+  document.getElementById("stockStatus").value =
+    p.stock_status || "in_stock";
+
+  document.getElementById("formTitle").textContent =
+    "Modifier le produit";
+
+  document
+    .getElementById("cancelEdit")
+    .classList.remove("hidden");
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+}
+
+async function deleteProduct(id,name){
+  if(
+    !confirm(
+      `Supprimer définitivement "${name}" ?`
+    )
+  ){
+    return;
+  }
+
+  const {error} =
+    await client
+      .from("products")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    alert(
+      "Erreur : " + error.message
+    );
+    return;
+  }
+
+  loadProducts();
+}
+
+function resetForm(){
+  document.getElementById("productId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("category").value = "";
+  document.getElementById("details").value = "";
+  document.getElementById("price").value = "";
+  document.getElementById("imageUrl").value = "";
+  document.getElementById("stockStatus").value =
+    "in_stock";
+
+  document.getElementById("formTitle").textContent =
+    "Ajouter un produit";
+
+  document
+    .getElementById("cancelEdit")
+    .classList.add("hidden");
+}
+
+function escapeHtml(value){
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function escapeAttr(value){
+  return escapeHtml(value);
+}
+
+start();
+</script>
+
+</body>
+</html>
