@@ -424,7 +424,7 @@ async function saveProduct(){
     category,
     details,
     price_cents:Math.round(price*100),
-    image_url:image_url || null,
+    image_url: finalImageUrl,
     stock_status
   };
 
