@@ -113,6 +113,27 @@ async function chargerProduitsSupabase() {
                 ? `<div class="supabase-out">ÉPUISÉ</div>`
                 : `<div class="supabase-stock">EN STOCK</div>`
             }
+            <div style="
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin-top:12px;
+">
+  <button
+    type="button"
+    onclick="this.nextElementSibling.textContent=Math.max(1,Number(this.nextElementSibling.textContent)-1)"
+    style="width:42px;height:42px;border-radius:10px;border:1px solid #555;background:#222;color:white;font-size:24px;"
+  >−</button>
+
+  <span style="min-width:32px;text-align:center;font-size:20px;font-weight:bold;">1</span>
+
+  <button
+    type="button"
+    onclick="this.previousElementSibling.textContent=Number(this.previousElementSibling.textContent)+1"
+    style="width:42px;height:42px;border-radius:10px;border:1px solid #555;background:#222;color:white;font-size:24px;"
+  >+</button>
+</div>
           </div>
         `).join("")}
       </div>
