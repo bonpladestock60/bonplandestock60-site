@@ -195,3 +195,92 @@ function ajouterPanier(button) {
     qty + " × " + name + " ajouté au panier ✅"
   );
 }
+function ajouterPanier(button) {
+  const card = button.closest(".supabase-card");
+  const name = card.querySelector("h3").textContent.trim();
+
+  const price = parseFloat(
+    card.querySelector(".supabase-price")
+      .textContent
+      .replace("€", "")
+      .replace(",", ".")
+      .trim()
+  );
+
+  const qty = Number(card.querySelector("span").textContent);
+
+  panier.push({ name, price, qty });
+
+  afficherPanier();
+}
+
+function afficherPanier() {
+  let box = document.getElementById("panier-visible");
+
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "panier-visible";
+    document.body.appendChild(box);
+  }
+
+  const total = panier.reduce(
+    (somme, produit) => somme + produit.price * produit.qty,
+    0
+  );
+
+  box.innerHTML = `
+    <div style="
+      position:fixed;
+      bottom:15px;
+      left:15px;
+      right:15px;
+      z-index:9999;
+      background:#111;
+      color:white;
+      border:2px solid #c9a227;
+      border-radius:18px;
+      padding:18px;
+      max-height:55vh;
+      overflow:auto;
+      box-shadow:0 5px 30px #000;
+    ">
+      <div style="font-size:22px;font-weight:bold;color:#c9a227;margin-bottom:12px;">
+        🛒 Mon panier
+      </div>
+
+      ${panier.map(p => `
+        <div style="margin-bottom:8px;">
+          ${p.qty} × ${p.name}
+          <strong style="float:right;">
+            ${(p.price * p.qty).toFixed(2).replace(".", ",")} €
+          </strong>
+        </div>
+      `).join("")}
+
+      <hr style="border-color:#444">
+
+      <div style="font-size:21px;font-weight:bold;">
+        Total :
+        <span style="float:right;color:#c9a227;">
+          ${total.toFixed(2).replace(".", ",")} €
+        </span>
+      </div>
+
+      <button
+        onclick="document.getElementById('panier-visible').remove()"
+        style="
+          width:100%;
+          margin-top:15px;
+          padding:12px;
+          border:0;
+          border-radius:10px;
+          background:#333;
+          color:white;
+          font-weight:bold;
+        "
+      >
+        Fermer
+      </button>
+    </div>
+  `;
+}
