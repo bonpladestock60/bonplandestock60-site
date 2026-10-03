@@ -166,3 +166,32 @@ document.addEventListener(
   "DOMContentLoaded",
   chargerProduitsSupabase
 );
+let panier = [];
+
+function ajouterPanier(button) {
+  const card = button.closest(".supabase-card");
+  const name = card.querySelector("h3").textContent.trim();
+
+  const priceText = card
+    .querySelector(".supabase-price")
+    .textContent
+    .replace("€", "")
+    .replace(",", ".")
+    .trim();
+
+  const price = parseFloat(priceText);
+
+  const qty = Number(
+    card.querySelector("span").textContent
+  );
+
+  panier.push({
+    name,
+    price,
+    qty
+  });
+
+  alert(
+    qty + " × " + name + " ajouté au panier ✅"
+  );
+}
