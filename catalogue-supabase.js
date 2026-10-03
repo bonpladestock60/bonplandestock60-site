@@ -133,6 +133,24 @@ async function chargerProduitsSupabase() {
     onclick="this.previousElementSibling.textContent=Number(this.previousElementSibling.textContent)+1"
     style="width:42px;height:42px;border-radius:10px;border:1px solid #555;background:#222;color:white;font-size:24px;"
   >+</button>
+  </div>
+  <button
+  class="add-cart"
+  onclick="ajouterPanier(this)"
+  style="
+    width:100%;
+    margin-top:12px;
+    padding:12px;
+    border:0;
+    border-radius:10px;
+    background:#c9a227;
+    color:#000;
+    font-weight:bold;
+    font-size:16px;
+  "
+>
+  Ajouter au panier
+</button>
 </div>
           </div>
         `).join("")}
