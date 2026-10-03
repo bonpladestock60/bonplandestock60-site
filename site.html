@@ -4,24 +4,254 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Bonplandestock60</title>
+
   <style>
+    :root{--g:#c9a227}
+    *{box-sizing:border-box}
+
     body{
       margin:0;
       background:#080808;
       color:#fff;
       font-family:Arial,sans-serif;
     }
+
     header{
-      padding:22px;
+      padding:24px;
       text-align:center;
       border-bottom:1px solid #333;
     }
+
+    h1,h2,h3{color:var(--g)}
+
     h1{
       margin:0;
-      color:#c9a227;
+      font-size:42px;
+    }
+
+    .info,#catalogue-app{
+      max-width:1200px;
+      margin:auto;
+      padding:20px;
+    }
+
+    .infoGrid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:12px;
+    }
+
+    .box,.card{
+      background:#151515;
+      border:1px solid #333;
+      border-radius:16px;
+    }
+
+    .box{padding:14px}
+
+    .cats{
+      display:flex;
+      gap:8px;
+      overflow:auto;
+    }
+
+    .cat{
+      white-space:nowrap;
+      background:#222;
+      color:#fff;
+      border:1px solid #555;
+      border-radius:999px;
+      padding:10px;
+    }
+
+    .cat.active,.cartTop,.add{
+      background:var(--g);
+      color:#000;
+    }
+
+    .head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .cartTop,.add{
+      border:0;
+      border-radius:10px;
+      padding:12px;
+      font-weight:bold;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+    }
+
+    .pic{
+      aspect-ratio:1/1;
+      background:#fff;
+      position:relative;
+    }
+
+    .pic img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+
+    .placeholder{
+      height:100%;
+      display:grid;
+      place-items:center;
+      color:#777;
+    }
+
+    .sold{
+      position:absolute;
+      top:8px;
+      left:8px;
+      background:#d9534f;
+      color:#fff;
+      padding:6px;
+      border-radius:6px;
+    }
+
+    .body{padding:12px}
+    .details{color:#bbb}
+
+    .price{
+      font-size:25px;
+      font-weight:bold;
+      margin:10px 0;
+    }
+
+    .in{color:#49c56b}
+    .out{color:#e25555}
+    .stock{font-weight:bold}
+
+    .qty{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      margin:12px 0;
+    }
+
+    .qty button{
+      width:42px;
+      height:42px;
+      background:#222;
+      color:#fff;
+      border:1px solid #555;
+      border-radius:10px;
+      font-size:22px;
+    }
+
+    .add{width:100%}
+
+    .overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:#000a;
+      z-index:99;
+    }
+
+    .overlay.open{display:block}
+
+    .drawer{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      background:#111;
+      border:2px solid var(--g);
+      border-radius:20px 20px 0 0;
+      padding:16px;
+      max-height:88vh;
+      overflow:auto;
+    }
+
+    .cartHead,.cirow,.tot{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .cartHead,.tot{
+      justify-content:space-between;
+    }
+
+    .cartHead button{
+      margin-left:auto;
+      background:none;
+      color:#fff;
+      border:0;
+      font-size:30px;
+    }
+
+    .ci{
+      padding:10px 0;
+      border-bottom:1px solid #333;
+    }
+
+    .cirow button{
+      background:#222;
+      color:#fff;
+      border:1px solid #555;
+      border-radius:8px;
+      padding:6px;
+    }
+
+    .cirow b{margin-left:auto}
+
+    .tot{
+      font-size:22px;
+      padding:15px 0;
+    }
+
+    .drawer input,
+    .drawer select,
+    .drawer textarea{
+      width:100%;
+      padding:11px;
+      margin:5px 0;
+      background:#1d1d1d;
+      color:#fff;
+      border:1px solid #444;
+      border-radius:8px;
+    }
+
+    .note{
+      font-size:13px;
+      background:#181818;
+      padding:10px;
+      border-radius:8px;
+      margin:8px 0;
+    }
+
+    .wa{
+      width:100%;
+      padding:13px;
+      border:0;
+      border-radius:10px;
+      background:#25D366;
+      font-weight:bold;
+    }
+
+    @media(min-width:800px){
+      .grid{grid-template-columns:repeat(3,1fr)}
+      .drawer{
+        left:auto;
+        width:520px;
+        top:0;
+        border-radius:0;
+      }
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -29,7 +259,25 @@
   <p>Produits à petits prix</p>
 </header>
 
-<script src="/catalogue-supabase.js"></script>
+<section class="info">
+  <div class="infoGrid">
+    <div class="box">
+      📍 78 rue du pont d’arcole, 60000 Beauvais
+    </div>
+
+    <div class="box">
+      ✉️ Bonplandestock60@gmail.com
+    </div>
+
+    <div class="box">
+      🚚 Livraison : 0–10 km 30€ min +3€ · 10–20 km 50€ min +5€
+    </div>
+  </div>
+</section>
+
+<main id="catalogue-app"></main>
+
+<script src="/catalogue-supabase.js?v=ready"></script>
 
 </body>
 </html>
