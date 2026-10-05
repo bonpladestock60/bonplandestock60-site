@@ -49,7 +49,11 @@ function choisirCategorie(c){
   categorie=c;
   document.getElementById("titre").textContent=c;
 
-  const liste=produits.filter(p=>p.category===c);
+const liste=produits
+  .filter(p=>p.category===c)
+  .sort((a,b)=>
+    String(a.name||"").localeCompare(String(b.name||""),"fr")
+  );
 
   document.getElementById("grid").innerHTML=liste.map(p=>{
     const out=p.stock_status==="out_of_stock";
