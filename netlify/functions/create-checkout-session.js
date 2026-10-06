@@ -122,35 +122,71 @@ exports.handler = async (event) => {
     }
 
     const merged = new Map();
-    for (const item of items) {
-      const id = clean(item.id, 40);
-      const quantity = Number(item.quantity);
-      if (!CATALOG[id]) {
-        return { statusCode: 400, body: JSON.stringify({ error: "Un produit du panier n’est pas reconnu." }) };
-      }
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 50) {
-        return { statusCode: 400, body: JSON.stringify({ error: "Quantité invalide." }) };
-      }
-      merged.set(id, (merged.get(id) || 0) + quantity);
-      if (merged.get(id) > 50) {
-        return { statusCode: 400, body: JSON.stringify({ error: "Quantité trop élevée." }) };
-      }
-    }
 
-    let subtotal = 0;
-    const line_items = [];
-    for (const [id, quantity] of merged.entries()) {
-      const product = CATALOG[id];
-      subtotal += product.cents * quantity;
-      line_items.push({
-        price_data: {
-          currency: "eur",
-          product_data: { name: product.name },
-          unit_amount: product.cents
-        },
-        quantity
-      });
+for (const item of items) {
+  const id = clean(item.id, 40);
+  const quantity = Number(item.quantity);
+
+  if (!/^\d+$/.test(id)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Produit invalide." })
+    };
+  }
+
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 50) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Quantité invalide." })
+    };
+  }
+
+  merged.set(id, (merged.get(id) || 0) + quantity);
+}
+
+const ids = [...merged.keys()].join(",");
+
+const rProduits = await fetch(
+  "https://jefwbrryqbjpttuljocj.supabase.co/rest/v1/products?id=in.(" +
+  ids +
+  ")&select=id,name,price_cents,stock_status",
+  {
+    headers: {
+      apikey: "sb_publishable_OLiKeTazrrbSFXev6lLyhg_9tOh9mZj",
+      Authorization:
+        "Bearer sb_publishable_OLiKeTazrrbSFXev6lLyhg_9tOh9mZj"
     }
+  }
+);
+
+const produitsSupabase = await rProduits.json();
+
+let subtotal = 0;
+const line_items = [];
+
+for (const [id, quantity] of merged.entries()) {
+  const product = produitsSupabase.find(
+    p => String(p.id) === String(id)
+  );
+
+  if (!product) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Produit introuvable." })
+    };
+  }
+
+  subtotal += product.price_cents * quantity;
+
+  line_items.push({
+    price_data: {
+      currency: "eur",
+      product_data: { name: product.name },
+      unit_amount: product.price_cents
+    },
+    quantity
+  });
+}
 
     const mode = clean(customer.mode, 60);
     const zone = clean(customer.zone, 30);
