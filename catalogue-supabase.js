@@ -222,6 +222,14 @@ function afficherPanier(){
       >
         Envoyer ma commande sur WhatsApp
       </button>
+      <button
+  class="wa"
+  style="margin-top:10px;background:#635bff;color:white"
+  onclick="payerStripe(this)"
+  ${a.length?"":"disabled"}
+>
+  Payer en ligne
+</button>
 
     </div>
   `;
@@ -253,7 +261,44 @@ function whatsapp(){
   location.href=
     "https://wa.me/"+W+"?text="+encodeURIComponent(msg);
 }
+async function payerStripe(btn){
+  const a=Object.values(panier);
+  if(!a.length)return;
 
+  const nom=document.getElementById("nom").value.trim();
+  const tel=document.getElementById("tel").value.trim();
+  const mode=document.getElementById("mode").value;
+  const adresse=document.getElementById("adresse").value.trim();
+
+  if(!nom||!tel){
+    alert("Nom et téléphone obligatoires.");
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent="Ouverture du paiement...";
+
+  try{
+    const r=await fetch("/.netlify/functions/create-checkout-session",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        items:a.map(p=>({id:p.id,quantity:p.qty})),
+        customer:{nom,tel,mode,adresse}
+      })
+    });
+
+    const data=await r.json();
+
+    if(!r.ok) throw new Error(data.error||"Erreur paiement");
+
+    location.href=data.url;
+  }catch(e){
+    alert(e.message||"Erreur paiement");
+    btn.disabled=false;
+    btn.textContent="Payer en ligne";
+  }
+}
 document.addEventListener(
   "DOMContentLoaded",
   chargerProduitsSupabase
