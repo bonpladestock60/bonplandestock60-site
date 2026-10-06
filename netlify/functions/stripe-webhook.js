@@ -60,7 +60,7 @@ Commande : ${session.id}`;
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: "Bonplandestock60 <onboarding@resend.dev>",
+       from: "Bonplandestock60 <commandes@bonplandestock60.fr>",
         to: ["Bonplandestock60@gmail.com"],
         subject: `Nouvelle commande payée — ${total} €`,
         text: texte
