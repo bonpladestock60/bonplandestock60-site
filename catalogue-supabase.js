@@ -299,6 +299,17 @@ async function payerStripe(btn){
     btn.textContent="Payer en ligne";
   }
 }
+const params = new URLSearchParams(location.search);
+
+if (params.get("paiement") === "succes") {
+  panier = {};
+  localStorage.removeItem("panier");
+
+  setTimeout(() => {
+    alert("Paiement confirmé ✅ Merci pour votre commande !");
+    history.replaceState({}, "", location.pathname);
+  }, 500);
+}
 document.addEventListener(
   "DOMContentLoaded",
   chargerProduitsSupabase
