@@ -69,9 +69,9 @@ Commande : ${session.id}`;
   );
 
   if (!reponseMail.ok) {
-    const erreurMail = await reponseMail.text();
-    console.error("Erreur Resend :", erreurMail);
-  }
+  const erreurMail = await reponseMail.text();
+  throw new Error("Erreur Resend : " + erreurMail);
+}
 
   console.log(
     "Paiement Bonplandestock60 confirmé :",
